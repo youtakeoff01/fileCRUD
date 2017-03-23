@@ -8,10 +8,21 @@
 
 <form name="uploadForm" action="${pageContext.request.contextPath}/uploadFile" enctype="multipart/form-data" 
 	method="post">
- 	file:<input type="file" name="file"><br/>
+ 	上传的文件:<input type="file" name="file"><br/>
          <input type="submit" value="提交">
 </form>
-
+<br />
+<form name="checkInForm" action="${pageContext.request.contextPath}/checkIn" enctype="multipart/form-data" 
+	method="post">
+ 	签入的文件:<input type="file" name="file"><br/>
+         <input type="submit" value="签入">
+</form>
+<br />
+<a href="${pageContext.request.contextPath}/checkOut">签出</a>
+<br />
+<a href="${pageContext.request.contextPath}/unCheckOut">取消签出</a>
+<br />
+<a href="${pageContext.request.contextPath}/removeElement">删除元素</a>
 </body>
 </html>
 

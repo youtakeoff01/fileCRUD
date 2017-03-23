@@ -1,23 +1,17 @@
 package com.hand.controller;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
-
-import net.sf.json.JSONObject;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -25,105 +19,186 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
+import com.hand.text.AleroFileUtils;
 import com.hand.utils.ContractUtils;
-import com.hand.utils.ServletUtils;
 
+import net.sf.json.JSONObject;
 @Controller
 public class DocumentController {
-	
+	/**
+	 * 文件上传。并添加版本控制
+	 * @param request
+	 * @return
+	 */
 	@RequestMapping(value="uploadFile", produces="application/json;charset=UTF-8", method = RequestMethod.POST)
 	public @ResponseBody String uploadFile(HttpServletRequest request){
 		File tempFile=null;
 		String fileName="";
-		HttpSession sesssion = ServletUtils.buildAppObject();
 		MultipartHttpServletRequest multipartRequest = (MultipartHttpServletRequest) request;
 		List<MultipartFile> getFiles = multipartRequest.getFiles("file");// 获取上传的文件
 		JSONObject json = new JSONObject();
+		int code = 11;
 		for (MultipartFile multipartFile : getFiles) {
 			 try {
+				 
 				tempFile = ContractUtils.getFile(multipartFile);
 				fileName = multipartFile.getOriginalFilename();
+				//上传文件
+				code = AleroFileUtils.uploadFile(fileName, tempFile.getPath(),AleroFileUtils.getConnect());
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}
-		if(tempFile == null){
+		if(code != 0){
 			json.put("success", false);
-			json.put("msg", "未获取到文件");
+			json.put("msg", "上传文件失败");
+			return json.toString();
+		}else{
+			json.put("success", true);
+			json.put("msg","文件上传成功，并添加了版本控制。");
 			return json.toString();
 		}
-		String fileType = ContractUtils.getFileType(fileName);
-		Map map=new HashMap();
-		json.put("success", true);
-		return json.toString();
 	}
-	
-	@RequestMapping(value="downloadFile", produces="text/plain;charset=UTF-8")
-	public void connector(HttpServletRequest request, final HttpServletResponse response) throws IOException {
-//		String target = request.getParameter("target");
-//		String versionId = request.getParameter("versionId");
-//		String revisionId = request.getParameter("revisionId");
-//		String version = request.getParameter("version");
-//		String revision = request.getParameter("revision");
-//		String rawCommentValue = request.getParameter("comment")==null?"":request.getParameter("comment").trim();
-//		String selectVersion = request.getParameter("versionSelect");
-//		
-//		boolean hasCheckoutComment = false;
-//		if(rawCommentValue!=null){
-//		    hasCheckoutComment = true;
-//		    rawCommentValue = new String( rawCommentValue.getBytes("iso-8859-1"), "UTF-8");
-//		}
-//		
-//		boolean download = true;
-//		String mime = "application/oct-stream";
-//		response.setCharacterEncoding("utf-8");
-//		response.setContentType(mime);
-//		String fileName = fsi.getName();
-//		if (download) {
-//			String fileNameOfVersion = fsi.getFileNameOfVersion(fsi,selectVersion);
-//			if(StringUtils.isNotBlank(fileNameOfVersion)){
-//				fileName = fileNameOfVersion;
-//			}
-//		    response.setHeader("Content-Disposition",
-//		        "attachments; " + CommonUtils.getAttaFileName(getFileVersionName(fileName,selectVersion), request.getHeader("USER-AGENT")));
-//		    //response.setHeader("Content-Location", fileUrlRelative);
-//		    response.setHeader("Content-Transfer-Encoding", "binary");
-//		}
-//		
-//		OutputStream out = response.getOutputStream();
-//		InputStream is = null;
-//		try
-//		{
-//		    // serve file
-//		        File checkoutFile = fsi.openVersionInputFile(fsi,versionId,revisionId,hasCheckoutComment,version,revision,rawCommentValue,selectVersion);
-//		        if (checkoutFile == null)
-//		            return;
-//		        
-//		        response.setContentLength((int) checkoutFile.length());
-//		        is = new FileInputStream( checkoutFile );
-//		        IOUtils.copy(is, out);
-//		        is.close();
-//		        fsi.deleteInputFile();
-//		        out.flush();
-//		        out.close();
-//		    }
-//		    finally
-//		    {
-//		        if (is != null)
-//		        {
-//		            try
-//		            {
-//		                is.close();
-//		                
-//		            }
-//		            catch (IOException e)
-//		            {
-//		                e.printStackTrace();
-//		            }
-//		        }
-//		    }
+	/**
+	 * 文件捡入
+	 * @param request
+	 * @param response
+	 * @return
+	 * @throws IOException
+	 */
+	@RequestMapping(value="checkIn", produces="text/plain;charset=UTF-8")
+	public @ResponseBody String checkIn(HttpServletRequest request, final HttpServletResponse response) throws IOException {
+		String elementId = "ALERO_MAIN::201703231710420::TEXT";
+		JSONObject json = new JSONObject();
+		//判断当前文件的状态
+		 if(!AleroFileUtils.judgeEleState(AleroFileUtils.getConnect(), elementId)){
+			 json.put("msg", "当前文档的状态为签入状态，请先签出");
+			 return json.toString();
+		 }
+		File tempFile=null;
+		MultipartHttpServletRequest multipartRequest = (MultipartHttpServletRequest) request;
+		List<MultipartFile> getFiles = multipartRequest.getFiles("file");// 获取上传的文件
+		int code = 11;
+		for (MultipartFile multipartFile : getFiles) {
+			 try {
+				 
+				tempFile = ContractUtils.getFile(multipartFile);
+				byte[] bytes = tempFile.getPath().getBytes();
+				//签入文件
+				code = AleroFileUtils.checkIn(new ByteArrayInputStream(bytes),AleroFileUtils.getConnect(),elementId);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		if(code != 0){
+			json.put("success", false);
+			json.put("msg", "签入文件失败");
+			return json.toString();
+		}else{
+			json.put("success", true);
+			json.put("msg","文件签入成功");
+			return json.toString();
+		}
 		
 	}
-
+	/**
+	 * 文件检出
+	 * @param request
+	 * @param response
+	 * @throws IOException
+	 */
+	@RequestMapping(value="checkOut", produces="text/plain;charset=UTF-8")
+	public @ResponseBody String  checkOut(HttpServletRequest request, final HttpServletResponse response) throws Exception {
+		String elementId = "ALERO_MAIN::201703231710420::TEXT";
+		 JSONObject json = new JSONObject();
+		 //判断当前文件的状态
+		 if(AleroFileUtils.judgeEleState(AleroFileUtils.getConnect(), elementId)){
+			 json.put("msg", "当前文档的状态为签出状态，请先取消签出");
+			 return json.toString();
+		 }
+		 response.setCharacterEncoding("utf-8");
+	     response.setContentType("text/plain");
+	     response.setHeader("Content-Disposition","attachments; filename*=UTF-8''sql_1.0.txt");
+	     response.setHeader("Content-Transfer-Encoding", "binary");
+	     OutputStream out = response.getOutputStream();
+	        InputStream is = null;
+	        try
+	        {
+	            // serve file
+	            File checkoutFile = AleroFileUtils.checkOut(AleroFileUtils.getConnect(), null,elementId);
+	            if (checkoutFile == null){
+	            	json.put("msg", "找不到要检出的文件");
+	            	return json.toString();
+	            }
+	            	
+	            
+	            response.setContentLength((int) checkoutFile.length());
+	            is = new FileInputStream( checkoutFile );
+	            IOUtils.copy(is, out);
+	            is.close();
+	            out.flush();
+	            out.close();
+	        }
+	        finally
+	        {
+	            if (is != null)
+	            {
+	                try
+	                {
+	                    is.close();
+	                    
+	                }
+	                catch (IOException e)
+	                {
+	                    e.printStackTrace();
+	                }
+	            }
+	        }
+	        json.put("success", true);
+	        return json.toString();
+	}
+	
+	/**
+	 * 文件取消签出
+	 * @param request
+	 * @param response
+	 * @throws IOException
+	 */
+	@RequestMapping(value="unCheckOut", produces="text/plain;charset=UTF-8")
+	public @ResponseBody String  unCheckOut(HttpServletRequest request, final HttpServletResponse response) throws Exception {
+		String elementId = "ALERO_MAIN::201703231710420::TEXT";
+		JSONObject json = new JSONObject();
+		 //判断当前文件的状态
+		 if(!AleroFileUtils.judgeEleState(AleroFileUtils.getConnect(), elementId)){
+			 json.put("msg", "当前文档的状态为签入状态，不能取消签出");
+			 return json.toString();
+		 }
+		 int code = AleroFileUtils.unCheckOut(AleroFileUtils.getConnect(), elementId);
+		if(code!=0){
+			json.put("msg","取消签出失败");
+		}else{
+			json.put("success", true);
+		}
+		return json.toString();
+	}
+	/**
+	 * 从容器中删除元素
+	 * @param request
+	 * @param response
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping(value="removeElement", produces="text/plain;charset=UTF-8")
+	public @ResponseBody String  removeElement(HttpServletRequest request, final HttpServletResponse response) throws Exception {
+		String elementId = "ALERO_MAIN::201703231710420::TEXT";
+		JSONObject json = new JSONObject();
+		 int code = AleroFileUtils.deleteElement(AleroFileUtils.getConnect(), elementId);
+		if(code!=0){
+			json.put("msg","删除元素失败");
+		}else{
+			json.put("success", true);
+		}
+		return json.toString();
+	}
 }
 
