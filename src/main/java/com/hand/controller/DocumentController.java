@@ -28,7 +28,7 @@ import net.sf.json.JSONObject;
 @Controller
 public class DocumentController {
 	
-	public static String ELEMENTID = "ALERO_MAIN::201703241705400::TEXT";
+	public static String ELEMENTID = "";
 	
 	@RequestMapping(value = "/", method = RequestMethod.GET)
 	public String home(HttpSession session, HttpServletRequest request, Model model) {
