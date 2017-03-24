@@ -146,7 +146,7 @@ public class AleroFileUtils {
 		
 	}
 	/**
-	 * 删除元素
+	 * 删除元素      
 	 */
 	public static int deleteElement(altConnectBase con,String elementId){
 		int code = 11;
