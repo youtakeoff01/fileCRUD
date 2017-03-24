@@ -1,4 +1,4 @@
-package com.hand.text;
+package com.hand.utils;
 
 
 import java.io.ByteArrayInputStream;

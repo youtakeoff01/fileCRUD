@@ -10,21 +10,31 @@ import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 import org.apache.commons.io.IOUtils;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
-import com.hand.text.AleroFileUtils;
+import com.hand.utils.AleroFileUtils;
 import com.hand.utils.ContractUtils;
 
 import net.sf.json.JSONObject;
 @Controller
 public class DocumentController {
+	
+	@RequestMapping(value = "/", method = RequestMethod.GET)
+	public String home(HttpSession session, HttpServletRequest request, Model model) {
+		session.invalidate();
+		return "uploadFile";
+	}
+	
+	
 	/**
 	 * 文件上传。并添加版本控制
 	 * @param request  
