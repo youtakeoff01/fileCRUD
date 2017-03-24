@@ -3,6 +3,9 @@ package com.hand.utils;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.OutputStream;
+import java.util.Properties;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpSession;
@@ -15,6 +18,7 @@ import com.alerotech.apis.altConnectBase;
 import com.alerotech.apis.altConnectData;
 import com.alerotech.apis.alt.altUsrElement;
 import com.alerotech.apis.alt.altUsrVersionElement;
+import com.hand.controller.DocumentController;
 
 public class AleroFileUtils {
 	/**
@@ -23,7 +27,7 @@ public class AleroFileUtils {
 	 * filePath  要上传文件的路径
 	 *  con  连接
 	 */
-	public static int uploadFile(String fileName,String filePath,altConnectBase con){
+	public static int uploadFile(String fileName,String filePath,altConnectBase con) throws Exception{
 		altUsrElement element = new altUsrElement(con);
 		element.m_cClassId = "";
 		element.m_archive = "MAIN";
@@ -38,9 +42,17 @@ public class AleroFileUtils {
 		}else{
 			System.out.println(element.m_elementId);
 			System.out.println("success");
+			DocumentController.ELEMENTID = element.m_elementId;
+//			Properties pro = new Properties();
+//			String path = AleroFileUtils.class.getResource("pro.properties").getPath();  
+//			OutputStream fos = new FileOutputStream(path);
+//			pro.put("elementId", element.m_elementId);
+//			pro.store(fos, "更新");
+//			fos.flush();  
+//			fos.close(); 
 			//将新建的元素放到指定的文件夹下，创建一个上下级关系
-			int code2 = element.insertContainer("ALERO_MAIN::201703221335361::FOLDER");
-			System.out.println(code2+"---"+element.getLastError());
+			//int code2 = element.insertContainer("ALERO_MAIN::201703221335361::FOLDER");
+			//System.out.println(code2+"---"+element.getLastError());
 		}
 		return code;
 	}
@@ -153,7 +165,8 @@ public class AleroFileUtils {
 		altUsrElement element = new altUsrElement(con);
 		element.m_elementId = elementId;
 	//    code = element.remove(elementId);
-		element.delete();
+		code = element.delete();
+		System.out.println("----------------------"+element.getLastError());
 		return code;
 	}
 	

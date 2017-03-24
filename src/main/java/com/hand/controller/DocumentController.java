@@ -28,6 +28,8 @@ import net.sf.json.JSONObject;
 @Controller
 public class DocumentController {
 	
+	public static String ELEMENTID = "ALERO_MAIN::201703241705400::TEXT";
+	
 	@RequestMapping(value = "/", method = RequestMethod.GET)
 	public String home(HttpSession session, HttpServletRequest request, Model model) {
 		session.invalidate();
@@ -78,7 +80,7 @@ public class DocumentController {
 	 */
 	@RequestMapping(value="checkIn", produces="text/plain;charset=UTF-8")
 	public @ResponseBody String checkIn(HttpServletRequest request, final HttpServletResponse response) throws IOException {
-		String elementId = "ALERO_MAIN::201703231710420::TEXT";
+		String elementId = ELEMENTID;
 		JSONObject json = new JSONObject();
 		//判断当前文件的状态
 		 if(!AleroFileUtils.judgeEleState(AleroFileUtils.getConnect(), elementId)){
@@ -119,7 +121,7 @@ public class DocumentController {
 	 */
 	@RequestMapping(value="checkOut", produces="text/plain;charset=UTF-8")
 	public @ResponseBody String  checkOut(HttpServletRequest request, final HttpServletResponse response) throws Exception {
-		String elementId = "ALERO_MAIN::201703231710420::TEXT";
+		String elementId = ELEMENTID;
 		 JSONObject json = new JSONObject();
 		 //判断当前文件的状态
 		 if(AleroFileUtils.judgeEleState(AleroFileUtils.getConnect(), elementId)){
@@ -176,7 +178,7 @@ public class DocumentController {
 	 */
 	@RequestMapping(value="unCheckOut", produces="text/plain;charset=UTF-8")
 	public @ResponseBody String  unCheckOut(HttpServletRequest request, final HttpServletResponse response) throws Exception {
-		String elementId = "ALERO_MAIN::201703231710420::TEXT";
+		String elementId = ELEMENTID;
 		JSONObject json = new JSONObject();
 		 //判断当前文件的状态
 		 if(!AleroFileUtils.judgeEleState(AleroFileUtils.getConnect(), elementId)){
@@ -200,11 +202,12 @@ public class DocumentController {
 	 */
 	@RequestMapping(value="removeElement", produces="text/plain;charset=UTF-8")
 	public @ResponseBody String  removeElement(HttpServletRequest request, final HttpServletResponse response) throws Exception {
-		String elementId = "ALERO_MAIN::201703231710420::TEXT";
+		String elementId = ELEMENTID;
 		JSONObject json = new JSONObject();
 		 int code = AleroFileUtils.deleteElement(AleroFileUtils.getConnect(), elementId);
 		if(code!=0){
 			json.put("msg","删除元素失败");
+			
 		}else{
 			json.put("success", true);
 		}
